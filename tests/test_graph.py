@@ -83,10 +83,12 @@ async def test_modify_changes_only_named_days(graph, fake):
     assert snap.interrupts and snap.values["revision"] == 2
 
 
-async def test_plan_wide_modify_accepts_new_draft(graph, fake):
-    await start(graph)
+async def test_plan_wide_modify_changes_lodging_not_days(graph, fake):
+    before = (await start(graph)).values["draft"]
     snap = await resume(graph, {"action": "modify", "modifications": [{"change": "Cheaper hotel"}]})
-    assert snap.values["draft"]["lodging"]["cost_per_night"] == 999
+    after = snap.values["draft"]
+    assert after["lodging"]["cost_per_night"] == 999
+    assert after["days"] == before["days"]  # the fake planner rewrote every day; none may leak through
 
 
 async def test_over_budget_draft_goes_back_to_planner_once(graph, fake):

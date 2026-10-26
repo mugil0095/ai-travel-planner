@@ -74,13 +74,13 @@ def estimate_budget(draft: dict, req: TravelRequest, research: dict) -> dict:
 
 def keep_unchanged(previous: dict, new: dict, modifications: list[dict]) -> dict:
     """Make a modify touch only what the reviewer named.
-    If every change names a day, all other days, the lodging and the texts stay exactly as before.
-    A plan-wide change (no day, e.g. the hotel) accepts the new draft as returned."""
-    if any(m.get("day") is None for m in modifications):
-        return new
-    changed = {m["day"] for m in modifications}
+    Named days come from the new draft; every other day stays exactly as before.
+    A plan-wide change (no day, e.g. the hotel) may also update the lodging and the texts;
+    without one, those stay as before too."""
+    changed = {m["day"] for m in modifications if m.get("day") is not None}
+    plan_wide = any(m.get("day") is None for m in modifications)
     new_days = {d["day"]: d for d in new["days"]}
-    merged = dict(previous)
+    merged = dict(new if plan_wide else previous)
     merged["days"] = [new_days.get(d["day"], d) if d["day"] in changed else d for d in previous["days"]]
     return merged
 

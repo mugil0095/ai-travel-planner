@@ -199,12 +199,15 @@ def test_estimate_budget_math():
     assert b["total"] == 410 and b["status"] == "within"
 
 
-@pytest.mark.parametrize("mods, expected_themes", [
-    ([{"day": 2, "change": "x"}], ["old1", "new2", "old3"]),
-    ([{"day": None, "change": "x"}], ["new1", "new2", "new3"]),
+@pytest.mark.parametrize("mods, expected_themes, expected_lodging", [
+    ([{"day": 2, "change": "x"}], ["old1", "new2", "old3"], "old"),
+    # plan-wide (no day, e.g. the hotel): lodging may change, days never do
+    ([{"day": None, "change": "cheaper hotel"}], ["old1", "old2", "old3"], "new"),
+    ([{"day": None, "change": "cheaper hotel"}, {"day": 3, "change": "x"}], ["old1", "old2", "new3"], "new"),
 ])
-def test_keep_unchanged(mods, expected_themes):
+def test_keep_unchanged(mods, expected_themes, expected_lodging):
     prev = {"lodging": "old", "days": [{"day": i, "theme": f"old{i}"} for i in (1, 2, 3)]}
     new = {"lodging": "new", "days": [{"day": i, "theme": f"new{i}"} for i in (1, 2, 3)]}
     merged = keep_unchanged(prev, new, mods)
     assert [d["theme"] for d in merged["days"]] == expected_themes
+    assert merged["lodging"] == expected_lodging
